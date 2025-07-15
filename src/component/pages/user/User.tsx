@@ -1,8 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
-import { fetchPosts } from "../../../api";
-import { Button, Card, Row, Table } from "react-bootstrap";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { deletePost, fetchPosts } from "../../../api";
+import { Button, Table } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
-import Delete from "../delete/Delete";
+// import Delete from "../delete/Delete";
 
 const User = () => {
   //   const getPostData = async () => {
@@ -19,8 +19,20 @@ const User = () => {
     queryKey: ["posts"],
     queryFn: fetchPosts,
   });
-  console.log("data", data);
+  //   console.log("data", data);
   //  console.log("getPostData", getPostData);
+
+  const queryClient = useQueryClient();
+  //   delete
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deletePost(id),
+    onSuccess: (data, id) => {
+      //   console.log(data, id);
+      queryClient.setQueryData(["posts"], (currElement: any) => {
+        return currElement?.filter((post: any) => post.id !== id);
+      });
+    },
+  });
 
   return (
     <div>
@@ -40,7 +52,7 @@ const User = () => {
             {data?.map((item: any, index: number) => {
               const { id, title, body } = item;
               return (
-                <tr>
+                <tr key={index}>
                   <td>{index + 1}</td>
                   <td>{id}</td>
                   <td>{title}</td>
@@ -50,7 +62,14 @@ const User = () => {
                   </td>
                   <td>
                     {/* delete */}
-                    <Delete />
+                    {/* <Delete /> */}
+
+                    <Button
+                      variant="danger btn-sm"
+                      onClick={() => deleteMutation.mutate(id)}
+                    >
+                      Delete
+                    </Button>
                   </td>
                 </tr>
               );
